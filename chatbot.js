@@ -1,10 +1,11 @@
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import readline from "readline";
 
 let askAI = async (input) => {
 	const formattedInput = `system A conversation between a user and a helpful understanding assistant. Always answer the user queries and questions. Continue this conversation. ${input}`;
 
 	const appleScriptCommand = `
+    on run argv
     set a to path to frontmost application as text
     
     tell application "Notes"
@@ -12,7 +13,7 @@ let askAI = async (input) => {
         tell account "iCloud"
             set newNote to make new note ¬
             at folder "Apple Intelligence" ¬
-            with properties {name:"Apple Intelligence Chatbot", body:"${formattedInput}"}
+            with properties {name:"Apple Intelligence Chatbot", body:(item 1 of argv)}
 
             delay 0.2
             show newNote
@@ -77,10 +78,11 @@ let askAI = async (input) => {
             return currentClipboard
         end if
     end repeat
+    end run
     `;
 
 	return new Promise((resolve, reject) => {
-		exec(`osascript -e '${appleScriptCommand}'`, (error, stdout, stderr) => {
+		execFile("osascript", ["-e", appleScriptCommand, formattedInput], (error, stdout, stderr) => {
 			if (error) {
 				reject(`Error executing osascript: ${error.message}`);
 				return;
